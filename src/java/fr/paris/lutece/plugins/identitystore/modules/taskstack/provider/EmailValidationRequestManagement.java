@@ -31,34 +31,49 @@
  *
  * License 1.0
  */
-package fr.paris.lutece.plugins.identitystore.modules.taskstack.service;
+package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
-import fr.paris.lutece.plugins.taskstack.dto.AuthorDto;
+import fr.paris.lutece.plugins.identitystore.service.identity.IdentityAttributeNotFoundException;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
+import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
+import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
+import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
+import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
-public class AuthorConverter
+public class EmailValidationRequestManagement extends AbstractTaskManagement
 {
-
-    private static AuthorConverter instance;
-
-    public static AuthorConverter instance( )
+    @Override
+    public String getTaskType( )
     {
-        if ( instance == null )
+        return TaskType.EMAIL_VALIDATION_REQUEST.name( );
+    }
+
+    @Override
+    public void doBefore( final TaskDto task ) throws TaskStackException
+    {
+        switch( task.getTaskStatus( ) )
         {
-            instance = new AuthorConverter( );
+            case TODO:
+                final IdentityDto identityDto = this.validateAndGetIdentity( task.getResourceId( ) );
+                this.validateEmail( identityDto, true );
+                break;
+            case IN_PROGRESS:
+            case REFUSED:
+            case CANCELED:
+            case PROCESSED:
+            default:
+                break;
         }
-        return instance;
     }
 
-    private AuthorConverter( )
+    @Override
+    public void doAfter( final TaskDto task ) throws TaskStackException
     {
+
     }
 
-    public AuthorDto toCore( final RequestAuthor author )
-    {
-        AuthorDto authorDto = new AuthorDto( );
-        authorDto.setName( author.getName( ) );
-        authorDto.setType( author.getType( ).name( ) );
-        return authorDto;
-    }
 }

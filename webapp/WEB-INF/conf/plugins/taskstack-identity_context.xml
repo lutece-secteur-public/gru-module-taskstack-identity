@@ -1,0 +1,8 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" >
+
+    <bean id="taskstack-identity.account.creation.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AccountCreationRequestManagement" />
+    <bean id="taskstack-identity.email.validation.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.EmailValidationRequestManagement" />
+    <bean id="taskstack-identity.taskStackIdentityRest" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.rs.TaskStackIdentityRest" />
+</beans>
