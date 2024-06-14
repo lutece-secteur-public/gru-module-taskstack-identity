@@ -33,33 +33,36 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request;
 
-import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.TaskConverter;
+import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.AuthorConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.AbstractIdentityStoreRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.IdentityTaskRequestValidator;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskUpdateStatusRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskUpdateStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.ResponseStatusFactory;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
-import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
+import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
 import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
 import fr.paris.lutece.plugins.taskstack.service.TaskService;
 
-public class IdentityStoreGetTaskRequest extends AbstractIdentityStoreRequest
+public class IdentityStoreUpdateTaskStatusRequest extends AbstractIdentityStoreRequest
 {
 
     private final String taskCode;
+    private final IdentityTaskUpdateStatusRequest taskUpdateStatusRequest;
 
-    public IdentityStoreGetTaskRequest( final String taskCode, final String strClientCode, final String authorName, final String authorType )
-            throws IdentityStoreException
+    public IdentityStoreUpdateTaskStatusRequest( final String taskCode, final IdentityTaskUpdateStatusRequest taskCreateRequest, final String strClientCode,
+            final String authorName, final String authorType ) throws IdentityStoreException
     {
         super( strClientCode, authorName, authorType );
+        this.taskUpdateStatusRequest = taskCreateRequest;
         this.taskCode = taskCode;
     }
 
     @Override
     protected void validateSpecificRequest( ) throws IdentityStoreException
     {
-        IdentityTaskRequestValidator.instance( ).validateTaskCode( taskCode );
+        IdentityTaskRequestValidator.instance( ).validateTaskStatusUpdateRequest( taskUpdateStatusRequest );
     }
 
     @Override
@@ -67,15 +70,15 @@ public class IdentityStoreGetTaskRequest extends AbstractIdentityStoreRequest
     {
         try
         {
-            final TaskDto task = TaskService.instance( ).getTask( taskCode );
-            final IdentityTaskGetResponse response = new IdentityTaskGetResponse( );
-            response.setTask( TaskConverter.instance( ).fromCore( task ) );
-            response.setStatus( ResponseStatusFactory.ok( ).setMessageKey( Constants.PROPERTY_REST_INFO_SUCCESSFUL_OPERATION ) );
+            TaskService.instance( ).updateTaskStatus( taskCode, TaskStatusType.valueOf( taskUpdateStatusRequest.getStatus( ).name( ) ),
+                    AuthorConverter.instance( ).toCore( _author ), _strClientCode );
+            final IdentityTaskUpdateStatusResponse response = new IdentityTaskUpdateStatusResponse( );
+            response.setStatus( ResponseStatusFactory.success( ).setMessageKey( Constants.PROPERTY_REST_INFO_SUCCESSFUL_OPERATION ) );
             return response;
         }
-        catch( TaskStackException e )
+        catch( final TaskStackException e )
         {
-            throw new IdentityStoreException( "Error while retrieving task " + taskCode + ".", e );
+            throw new IdentityStoreException( "An error occurred during task creation request: " + e.getMessage( ), e );
         }
     }
 }

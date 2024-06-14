@@ -37,6 +37,7 @@ import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.Ident
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreGetTaskRequest;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreGetTaskStatusRequest;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreSearchTaskRequest;
+import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreUpdateTaskStatusRequest;
 import fr.paris.lutece.plugins.identitystore.service.IdentityStoreService;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
@@ -44,6 +45,8 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetR
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskUpdateStatusRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskUpdateStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.swagger.SwaggerConstants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -60,6 +63,7 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -80,7 +84,7 @@ public class TaskStackIdentityRest
     @Path( Constants.TASK_PATH )
     @Produces( MediaType.APPLICATION_JSON )
     @Consumes( MediaType.APPLICATION_JSON )
-    @ApiOperation( value = "Create a new task", notes = "The creation is conditioned by the service contract definition associated to the client application code." )
+    @ApiOperation( value = "Create a new task" )
     @ApiResponses( value = {
             @ApiResponse( code = 201, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
             @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
@@ -98,15 +102,41 @@ public class TaskStackIdentityRest
         return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
     }
 
+    @PUT
+    @Path( Constants.TASK_PATH + Constants.TASK_STATUS_PATH )
+    @Produces( MediaType.APPLICATION_JSON )
+    @Consumes( MediaType.APPLICATION_JSON )
+    @ApiOperation( value = "Update the status of the task" )
+    @ApiResponses( value = {
+            @ApiResponse( code = 201, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
+            @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
+    } )
+    public Response updateTaskStatus(
+            @ApiParam( name = Constants.TASK_CODE_PARAM, value = "the code of the task" ) @PathParam( Constants.TASK_CODE_PARAM ) final String taskCode,
+            @ApiParam( name = "Request body", value = "A create task request" ) final IdentityTaskUpdateStatusRequest taskUpdateStatusRequest,
+            @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
+            @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
+            @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,
+            @ApiParam( name = Constants.PARAM_APPLICATION_CODE, value = SwaggerConstants.PARAM_APPLICATION_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_APPLICATION_CODE ) @DefaultValue( "" ) final String strHeaderAppCode )
+            throws IdentityStoreException
+    {
+        final String trustedClientCode = IdentityStoreService.getTrustedClientCode( strHeaderClientCode, StringUtils.EMPTY, strHeaderAppCode );
+        final IdentityStoreUpdateTaskStatusRequest request = new IdentityStoreUpdateTaskStatusRequest( taskCode, taskUpdateStatusRequest, trustedClientCode,
+                authorName, authorType );
+        final IdentityTaskUpdateStatusResponse response = (IdentityTaskUpdateStatusResponse) request.doRequest( );
+        return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
+    }
+
     @GET
-    @Path( Constants.TASK_PATH + "/status/{task_code}" )
+    @Path( Constants.TASK_PATH + Constants.TASK_STATUS_PATH )
     @Produces( MediaType.APPLICATION_JSON )
     @ApiOperation( value = "Get the task status", notes = "" )
     @ApiResponses( value = {
             @ApiResponse( code = 200, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
             @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
     } )
-    public Response getTaskStatus( @ApiParam( name = "task_code", value = "the code of the task" ) @PathParam( "task_code" ) final String taskCode,
+    public Response getTaskStatus(
+            @ApiParam( name = Constants.TASK_CODE_PARAM, value = "the code of the task" ) @PathParam( Constants.TASK_CODE_PARAM ) final String taskCode,
             @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
             @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
             @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,
@@ -120,14 +150,15 @@ public class TaskStackIdentityRest
     }
 
     @GET
-    @Path( Constants.TASK_PATH + "/{task_code}" )
+    @Path( Constants.TASK_PATH + "/{" + Constants.TASK_CODE_PARAM + "}" )
     @Produces( MediaType.APPLICATION_JSON )
     @ApiOperation( value = "Get the task", notes = "" )
     @ApiResponses( value = {
             @ApiResponse( code = 200, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
             @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
     } )
-    public Response getTask( @ApiParam( name = "task_code", value = "the code of the task" ) @PathParam( "task_code" ) final String taskCode,
+    public Response getTask(
+            @ApiParam( name = Constants.TASK_CODE_PARAM, value = "the code of the task" ) @PathParam( Constants.TASK_CODE_PARAM ) final String taskCode,
             @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
             @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
             @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,

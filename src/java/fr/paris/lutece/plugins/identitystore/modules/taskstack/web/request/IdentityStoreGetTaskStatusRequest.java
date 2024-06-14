@@ -34,7 +34,7 @@
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.AbstractIdentityStoreRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.TaskRequestValidator;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.IdentityTaskRequestValidator;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.ResponseStatusFactory;
@@ -58,7 +58,7 @@ public class IdentityStoreGetTaskStatusRequest extends AbstractIdentityStoreRequ
     @Override
     protected void validateSpecificRequest( ) throws IdentityStoreException
     {
-        TaskRequestValidator.instance( ).validateTaskCode( taskCode );
+        IdentityTaskRequestValidator.instance( ).validateTaskCode( taskCode );
     }
 
     @Override

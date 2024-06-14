@@ -36,7 +36,7 @@ package fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.AuthorConverter;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.TaskConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.AbstractIdentityStoreRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.TaskRequestValidator;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.IdentityTaskRequestValidator;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
@@ -60,7 +60,7 @@ public class IdentityStoreCreateTaskRequest extends AbstractIdentityStoreRequest
     @Override
     protected void validateSpecificRequest( ) throws IdentityStoreException
     {
-        TaskRequestValidator.instance( ).validateTaskCreateRequest( taskCreateRequest );
+        IdentityTaskRequestValidator.instance( ).validateTaskCreateRequest( taskCreateRequest );
     }
 
     @Override
