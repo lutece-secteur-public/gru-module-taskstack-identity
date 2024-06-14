@@ -47,7 +47,7 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
     }
 
     @Override
-    public void doBefore( final String strResourceId, final TaskStatusType status ) throws TaskStackException
+    public void doBefore( final String strResourceId, final String strResourceType, final TaskStatusType status ) throws TaskStackException
     {
         switch( status )
         {
@@ -65,7 +65,7 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
     }
 
     @Override
-    public void doAfter( final String strResourceId, final TaskStatusType status ) throws TaskStackException
+    public void doAfter( final String strResourceId, final String strResourceType, final TaskStatusType status ) throws TaskStackException
     {
 
     }
