@@ -34,11 +34,16 @@
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.rs;
 
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreCreateTaskRequest;
+import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreGetTaskRequest;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreGetTaskStatusRequest;
+import fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request.IdentityStoreSearchTaskRequest;
 import fr.paris.lutece.plugins.identitystore.service.IdentityStoreService;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskCreateRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskCreateResponse;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskGetStatusResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.swagger.SwaggerConstants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -80,7 +85,7 @@ public class TaskStackIdentityRest
             @ApiResponse( code = 201, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
             @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
     } )
-    public Response createTask( @ApiParam( name = "Request body", value = "A create task request" ) final TaskCreateRequest taskCreateRequest,
+    public Response createTask( @ApiParam( name = "Request body", value = "A create task request" ) final IdentityTaskCreateRequest taskCreateRequest,
             @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
             @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
             @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,
@@ -89,7 +94,7 @@ public class TaskStackIdentityRest
     {
         final String trustedClientCode = IdentityStoreService.getTrustedClientCode( strHeaderClientCode, StringUtils.EMPTY, strHeaderAppCode );
         final IdentityStoreCreateTaskRequest request = new IdentityStoreCreateTaskRequest( taskCreateRequest, trustedClientCode, authorName, authorType );
-        final TaskCreateResponse response = (TaskCreateResponse) request.doRequest( );
+        final IdentityTaskCreateResponse response = (IdentityTaskCreateResponse) request.doRequest( );
         return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
     }
 
@@ -110,7 +115,50 @@ public class TaskStackIdentityRest
     {
         final String trustedClientCode = IdentityStoreService.getTrustedClientCode( strHeaderClientCode, StringUtils.EMPTY, strHeaderAppCode );
         final IdentityStoreGetTaskStatusRequest request = new IdentityStoreGetTaskStatusRequest( taskCode, trustedClientCode, authorName, authorType );
-        final TaskGetStatusResponse response = (TaskGetStatusResponse) request.doRequest( );
+        final IdentityTaskGetStatusResponse response = (IdentityTaskGetStatusResponse) request.doRequest( );
+        return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
+    }
+
+    @GET
+    @Path( Constants.TASK_PATH + "/{task_code}" )
+    @Produces( MediaType.APPLICATION_JSON )
+    @ApiOperation( value = "Get the task", notes = "" )
+    @ApiResponses( value = {
+            @ApiResponse( code = 200, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
+            @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
+    } )
+    public Response getTask( @ApiParam( name = "task_code", value = "the code of the task" ) @PathParam( "task_code" ) final String taskCode,
+            @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
+            @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
+            @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,
+            @ApiParam( name = Constants.PARAM_APPLICATION_CODE, value = SwaggerConstants.PARAM_APPLICATION_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_APPLICATION_CODE ) @DefaultValue( "" ) final String strHeaderAppCode )
+            throws IdentityStoreException
+    {
+        final String trustedClientCode = IdentityStoreService.getTrustedClientCode( strHeaderClientCode, StringUtils.EMPTY, strHeaderAppCode );
+        final IdentityStoreGetTaskRequest request = new IdentityStoreGetTaskRequest( taskCode, trustedClientCode, authorName, authorType );
+        final IdentityTaskGetResponse response = (IdentityTaskGetResponse) request.doRequest( );
+        return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
+    }
+
+    @POST
+    @Path( Constants.TASK_PATH + Constants.SEARCH_TASK_PATH )
+    @Produces( MediaType.APPLICATION_JSON )
+    @Consumes( MediaType.APPLICATION_JSON )
+    @ApiOperation( value = "Search a task", notes = "" )
+    @ApiResponses( value = {
+            @ApiResponse( code = 201, message = "Success" ), @ApiResponse( code = 400, message = ERROR_DURING_TREATMENT + " with explanation message" ),
+            @ApiResponse( code = 403, message = "Failure" ), @ApiResponse( code = 409, message = "Conflict" )
+    } )
+    public Response search( @ApiParam( name = "Request body", value = "A search task request" ) final IdentityTaskSearchRequest taskSearchRequest,
+            @ApiParam( name = Constants.PARAM_CLIENT_CODE, value = SwaggerConstants.PARAM_CLIENT_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_CLIENT_CODE ) final String strHeaderClientCode,
+            @ApiParam( name = Constants.PARAM_AUTHOR_NAME, value = SwaggerConstants.PARAM_AUTHOR_NAME_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_NAME ) final String authorName,
+            @ApiParam( name = Constants.PARAM_AUTHOR_TYPE, value = SwaggerConstants.PARAM_AUTHOR_TYPE_DESCRIPTION ) @HeaderParam( Constants.PARAM_AUTHOR_TYPE ) final String authorType,
+            @ApiParam( name = Constants.PARAM_APPLICATION_CODE, value = SwaggerConstants.PARAM_APPLICATION_CODE_DESCRIPTION ) @HeaderParam( Constants.PARAM_APPLICATION_CODE ) @DefaultValue( "" ) final String strHeaderAppCode )
+            throws IdentityStoreException
+    {
+        final String trustedClientCode = IdentityStoreService.getTrustedClientCode( strHeaderClientCode, StringUtils.EMPTY, strHeaderAppCode );
+        final IdentityStoreSearchTaskRequest request = new IdentityStoreSearchTaskRequest( taskSearchRequest, trustedClientCode, authorName, authorType );
+        final IdentityTaskSearchResponse response = (IdentityTaskSearchResponse) request.doRequest( );
         return Response.status( response.getStatus( ).getHttpCode( ) ).entity( response ).type( MediaType.APPLICATION_JSON_TYPE ).build( );
     }
 

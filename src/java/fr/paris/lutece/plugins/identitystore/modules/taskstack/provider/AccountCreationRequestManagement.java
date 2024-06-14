@@ -34,7 +34,7 @@
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
 
@@ -43,7 +43,7 @@ public class AccountCreationRequestManagement extends AbstractTaskManagement
     @Override
     public String getTaskType( )
     {
-        return TaskType.ACCOUNT_CREATION_REQUEST.name( );
+        return IdentityTaskType.ACCOUNT_CREATION_REQUEST.name( );
     }
 
     @Override

@@ -33,34 +33,41 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request;
 
-import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.AuthorConverter;
 import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.TaskConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.AbstractIdentityStoreRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.TaskRequestValidator;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.ResponseStatusFactory;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
+import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
+import fr.paris.lutece.plugins.taskstack.dto.CreationDateOrdering;
+import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
 import fr.paris.lutece.plugins.taskstack.service.TaskService;
+import org.apache.commons.collections4.CollectionUtils;
 
-public class IdentityStoreCreateTaskRequest extends AbstractIdentityStoreRequest
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class IdentityStoreSearchTaskRequest extends AbstractIdentityStoreRequest
 {
 
-    private final IdentityTaskCreateRequest taskCreateRequest;
+    private final IdentityTaskSearchRequest taskSearchRequest;
 
-    public IdentityStoreCreateTaskRequest( final IdentityTaskCreateRequest taskCreateRequest, final String strClientCode, final String authorName,
+    public IdentityStoreSearchTaskRequest( final IdentityTaskSearchRequest taskSearchRequest, final String strClientCode, final String authorName,
             final String authorType ) throws IdentityStoreException
     {
         super( strClientCode, authorName, authorType );
-        this.taskCreateRequest = taskCreateRequest;
+        this.taskSearchRequest = taskSearchRequest;
     }
 
     @Override
     protected void validateSpecificRequest( ) throws IdentityStoreException
     {
-        TaskRequestValidator.instance( ).validateTaskCreateRequest( taskCreateRequest );
+        TaskRequestValidator.instance( ).validateTaskSearchRequest( taskSearchRequest );
     }
 
     @Override
@@ -68,10 +75,20 @@ public class IdentityStoreCreateTaskRequest extends AbstractIdentityStoreRequest
     {
         try
         {
-            final String taskCode = TaskService.instance( ).createTask( TaskConverter.instance( ).toCore( taskCreateRequest.getTask( ) ),
-                    AuthorConverter.instance( ).toCore( _author ), _strClientCode );
-            final IdentityTaskCreateResponse response = new IdentityTaskCreateResponse( );
-            response.setTaskCode( taskCode );
+            final String strTaskType = taskSearchRequest.getTaskType( ) != null ? taskSearchRequest.getTaskType( ).name( ) : null;
+            final List<TaskStatusType> taskStatus = new ArrayList<>( );
+            if ( CollectionUtils.isNotEmpty( taskSearchRequest.getTaskStatus( ) ) )
+            {
+                taskStatus
+                        .addAll( taskSearchRequest.getTaskStatus( ).stream( ).map( t -> TaskStatusType.valueOf( t.name( ) ) ).collect( Collectors.toList( ) ) );
+            }
+            final CreationDateOrdering creationDateOrdering = taskSearchRequest.getCreationDateOrdering( ) != null
+                    ? CreationDateOrdering.valueOf( taskSearchRequest.getCreationDateOrdering( ).name( ) )
+                    : null;
+            final List<TaskDto> searchResults = TaskService.instance( ).search( strTaskType, taskStatus, taskSearchRequest.getNbDaysSinceCreated( ),
+                    creationDateOrdering );
+            final IdentityTaskSearchResponse response = new IdentityTaskSearchResponse( );
+            response.getTasks( ).addAll( searchResults.stream( ).map( task -> TaskConverter.instance( ).fromCore( task ) ).collect( Collectors.toList( ) ) );
             response.setStatus( ResponseStatusFactory.success( ).setMessageKey( Constants.PROPERTY_REST_INFO_SUCCESSFUL_OPERATION ) );
             return response;
         }

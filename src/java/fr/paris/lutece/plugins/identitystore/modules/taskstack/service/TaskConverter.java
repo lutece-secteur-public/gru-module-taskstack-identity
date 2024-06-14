@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.service;
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskStatusType;
 import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 
@@ -53,21 +55,39 @@ public class TaskConverter
     {
     }
 
-    public TaskDto toCore( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskDto taskDto )
+    public TaskDto toCore( final IdentityTaskDto identityTaskDto )
     {
-        final TaskDto taskCore = new TaskDto( );
-        taskCore.setTaskCode( taskDto.getTaskCode( ) );
+        final TaskDto taskDto = new TaskDto( );
+        taskDto.setTaskCode( identityTaskDto.getTaskCode( ) );
+        if ( identityTaskDto.getTaskStatus( ) != null )
+        {
+            taskDto.setTaskStatus( TaskStatusType.valueOf( identityTaskDto.getTaskStatus( ).name( ) ) );
+        }
+        taskDto.setTaskType( identityTaskDto.getTaskType( ) );
+        taskDto.getMetadata( ).putAll( identityTaskDto.getMetadata( ) );
+        taskDto.setCreationDate( identityTaskDto.getCreationDate( ) );
+        taskDto.setLastUpdateDate( identityTaskDto.getLastUpdateDate( ) );
+        taskDto.setLastUpdateClientCode( identityTaskDto.getLastUpdateClientCode( ) );
+        taskDto.setResourceId( identityTaskDto.getResourceId( ) );
+        taskDto.setResourceType( identityTaskDto.getResourceType( ) );
+        return taskDto;
+    }
+
+    public IdentityTaskDto fromCore( final TaskDto taskDto )
+    {
+        final IdentityTaskDto identityTaskDto = new IdentityTaskDto( );
+        identityTaskDto.setTaskCode( taskDto.getTaskCode( ) );
         if ( taskDto.getTaskStatus( ) != null )
         {
-            taskCore.setTaskStatus( TaskStatusType.valueOf( taskDto.getTaskStatus( ).name( ) ) );
+            identityTaskDto.setTaskStatus( IdentityTaskStatusType.valueOf( taskDto.getTaskStatus( ).name( ) ) );
         }
-        taskCore.setTaskType( taskDto.getTaskType( ) );
-        taskCore.setMetadata( taskDto.getMetadata( ) );
-        taskCore.setCreationDate( taskDto.getCreationDate( ) );
-        taskCore.setLastUpdateDate( taskDto.getLastUpdateDate( ) );
-        taskCore.setLastUpdateClientCode( taskDto.getLastUpdateClientCode( ) );
-        taskCore.setResourceId( taskDto.getResourceId( ) );
-        taskCore.setResourceType( taskDto.getResourceType( ) );
-        return taskCore;
+        identityTaskDto.setTaskType( taskDto.getTaskType( ) );
+        identityTaskDto.getMetadata( ).putAll( taskDto.getMetadata( ) );
+        identityTaskDto.setCreationDate( taskDto.getCreationDate( ) );
+        identityTaskDto.setLastUpdateDate( taskDto.getLastUpdateDate( ) );
+        identityTaskDto.setLastUpdateClientCode( taskDto.getLastUpdateClientCode( ) );
+        identityTaskDto.setResourceId( taskDto.getResourceId( ) );
+        identityTaskDto.setResourceType( taskDto.getResourceType( ) );
+        return identityTaskDto;
     }
 }

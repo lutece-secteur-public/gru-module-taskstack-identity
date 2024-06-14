@@ -35,7 +35,7 @@ package fr.paris.lutece.plugins.identitystore.modules.taskstack.web.request;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.AbstractIdentityStoreRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.TaskRequestValidator;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskGetStatusResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.ResponseStatusFactory;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -67,7 +67,7 @@ public class IdentityStoreGetTaskStatusRequest extends AbstractIdentityStoreRequ
         try
         {
             final TaskDto task = TaskService.instance( ).getTask( taskCode );
-            final TaskGetStatusResponse response = new TaskGetStatusResponse( );
+            final IdentityTaskGetStatusResponse response = new IdentityTaskGetStatusResponse( );
             response.setTaskStatus( task.getTaskStatus( ).name( ) );
             response.setStatus( ResponseStatusFactory.ok( ).setMessageKey( Constants.PROPERTY_REST_INFO_SUCCESSFUL_OPERATION ) );
             return response;

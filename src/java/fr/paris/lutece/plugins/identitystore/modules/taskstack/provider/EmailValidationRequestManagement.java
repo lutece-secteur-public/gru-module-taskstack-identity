@@ -33,23 +33,17 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
-import fr.paris.lutece.plugins.identitystore.service.identity.IdentityAttributeNotFoundException;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.TaskType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
-import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
-import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
-import fr.paris.lutece.portal.service.util.AppLogService;
 
 public class EmailValidationRequestManagement extends AbstractTaskManagement
 {
     @Override
     public String getTaskType( )
     {
-        return TaskType.EMAIL_VALIDATION_REQUEST.name( );
+        return IdentityTaskType.EMAIL_VALIDATION_REQUEST.name( );
     }
 
     @Override
