@@ -45,7 +45,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.DtoConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
-import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
+import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 import fr.paris.lutece.plugins.taskstack.service.ITaskManagement;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
@@ -55,61 +55,61 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractTaskManagement implements ITaskManagement
 {
-    protected IdentityDto validateAndGetIdentity( final String cuid ) throws TaskStackException
+    protected IdentityDto validateAndGetIdentity( final String cuid ) throws TaskValidationException
     {
         final Identity identity = IdentityHome.findByCustomerId( cuid );
         if ( identity == null )
         {
-            throw new TaskStackException( "No identity was found for the provided CUID" );
+            throw new TaskValidationException( "No identity was found for the provided CUID" );
         }
         if ( identity.isDeleted( ) )
         {
-            throw new TaskStackException( "The identity is deleted" );
+            throw new TaskValidationException( "The identity is deleted" );
         }
         if ( identity.isMerged( ) )
         {
-            throw new TaskStackException( "The identity is merged" );
+            throw new TaskValidationException( "The identity is merged" );
         }
 
         return DtoConverter.convertIdentityToDto( identity );
     }
 
-    protected void validateEmail( final IdentityDto identityDto, final boolean checkCertification ) throws TaskStackException
+    protected void validateEmail( final IdentityDto identityDto, final boolean checkCertification ) throws TaskValidationException
     {
         final AttributeDto emailAttr = identityDto.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( Constants.PARAM_EMAIL ) ).findFirst( )
-                .orElseThrow( ( ) -> new TaskStackException( "The identity does not have an email attribute" ) );
+                .orElseThrow( ( ) -> new TaskValidationException( "The identity does not have an email attribute" ) );
         try
         {
             if ( !IdentityAttributeValidationService.instance( ).validateAttribute( Constants.PARAM_EMAIL, emailAttr.getValue( ) ) )
             {
-                throw new TaskStackException( "The identity email has an invalid value format" );
+                throw new TaskValidationException( "The identity email has an invalid value format" );
             }
         }
         catch( final IdentityAttributeNotFoundException e )
         {
-            throw new TaskStackException( e.getMessage( ), e );
+            throw new TaskValidationException( e.getMessage( ), e );
         }
         if ( checkCertification )
         {
             if ( emailAttr.getCertificationLevel( ) != null && emailAttr.getCertificationLevel( ) > 100 )
             {
-                throw new TaskStackException( "The identity email has already been validated" );
+                throw new TaskValidationException( "The identity email has already been validated" );
             }
         }
     }
 
-    protected void validateAccountRequirement( final IdentityDto identityDto ) throws TaskStackException
+    protected void validateAccountRequirement( final IdentityDto identityDto ) throws TaskValidationException
     {
         this.validateEmail( identityDto, false );
         if ( identityDto.isMonParisActive( ) )
         {
-            throw new TaskStackException( "The identity is already connected" );
+            throw new TaskValidationException( "The identity is already connected" );
         }
         this.validateIdentityCertification( identityDto );
     }
 
     // TODO valider la spec: l'identité doit avoir un niveau minimum de certification (à définir en properties, le niveau de ORIG1 pour commencer)
-    private void validateIdentityCertification( final IdentityDto identityDto ) throws TaskStackException
+    private void validateIdentityCertification( final IdentityDto identityDto ) throws TaskValidationException
     {
         final String minCertificationCode = AppPropertiesService.getProperty( "task.account.creation.minimum.certification" );
         final List<String> pivotKeys = IdentityAttributeService.instance( ).getPivotAttributeKeys( ).stream( ).map( AttributeKey::getKeyName )
@@ -136,11 +136,11 @@ public abstract class AbstractTaskManagement implements ITaskManagement
             // invalid
             else
             {
-                throw new TaskStackException( "The identity has missing pivot attributes and cannot be connected" );
+                throw new TaskValidationException( "The identity has missing pivot attributes and cannot be connected" );
             }
     }
 
-    private void validateAttributesCertification( final List<AttributeDto> pivotAttributes, final String minCertificationCode ) throws TaskStackException
+    private void validateAttributesCertification( final List<AttributeDto> pivotAttributes, final String minCertificationCode ) throws TaskValidationException
     {
         final List<String> errors = new ArrayList<>( );
         for ( final AttributeDto attributeDto : pivotAttributes )
@@ -159,7 +159,7 @@ public abstract class AbstractTaskManagement implements ITaskManagement
             final StringBuilder error = new StringBuilder( "Some errors occurred during pivot attributes validation. The minimum certification processus is " )
                     .append( minCertificationCode ).append( "." );
             errors.forEach( error::append );
-            throw new TaskStackException( error.toString( ) );
+            throw new TaskValidationException( error.toString( ) );
         }
     }
 
