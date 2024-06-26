@@ -60,15 +60,15 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         final Identity identity = IdentityHome.findByCustomerId( cuid );
         if ( identity == null )
         {
-            throw new TaskValidationException( "No identity was found for the provided CUID" );
+            throw new TaskValidationException( "No identity was found for the provided CUID " + cuid );
         }
         if ( identity.isDeleted( ) )
         {
-            throw new TaskValidationException( "The identity is deleted" );
+            throw new TaskValidationException( "The identity " + cuid + " is deleted" );
         }
         if ( identity.isMerged( ) )
         {
-            throw new TaskValidationException( "The identity is merged" );
+            throw new TaskValidationException( "The identity " + cuid + " is merged" );
         }
 
         return DtoConverter.convertIdentityToDto( identity );

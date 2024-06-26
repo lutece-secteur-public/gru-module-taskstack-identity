@@ -36,7 +36,7 @@ package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
-import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
+import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 
 public class EmailValidationRequestManagement extends AbstractTaskManagement
@@ -48,12 +48,12 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
     }
 
     @Override
-    public void doBefore( final String strResourceId, final String strResourceType, final TaskStatusType status ) throws TaskValidationException
+    public void doBefore( final TaskDto task ) throws TaskValidationException
     {
-        switch( status )
+        switch( task.getTaskStatus( ) )
         {
             case TODO:
-                final IdentityDto identityDto = this.validateAndGetIdentity( strResourceId );
+                final IdentityDto identityDto = this.validateAndGetIdentity( task.getResourceId( ) );
                 this.validateEmail( identityDto, true );
                 break;
             case IN_PROGRESS:
@@ -66,7 +66,7 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
     }
 
     @Override
-    public void doAfter( final String strResourceId, final String strResourceType, final TaskStatusType status ) throws TaskValidationException
+    public void doAfter( final TaskDto task ) throws TaskValidationException
     {
 
     }

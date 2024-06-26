@@ -35,16 +35,17 @@ package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 
-public class AccountCreationRequestManagement extends AbstractTaskManagement
+public class AccountMergeRequestManagement extends AbstractTaskManagement
 {
     @Override
     public String getTaskType( )
     {
-        return IdentityTaskType.ACCOUNT_CREATION_REQUEST.name( );
+        return IdentityTaskType.ACCOUNT_MERGE_REQUEST.name( );
     }
 
     @Override
@@ -53,8 +54,11 @@ public class AccountCreationRequestManagement extends AbstractTaskManagement
         switch( task.getTaskStatus( ) )
         {
             case TODO:
-                final IdentityDto identityDto = this.validateAndGetIdentity( task.getResourceId( ) );
-                this.validateAccountRequirement( identityDto );
+                final String secondCuid = task.getMetadata( ).get( Constants.METADATA_ACCOUNT_MERGE_SECOND_CUID );
+                final IdentityDto firstIdentity = this.validateAndGetIdentity( task.getResourceId( ) );
+                final IdentityDto secondIdentity = this.validateAndGetIdentity( secondCuid );
+                this.validateIdentity( firstIdentity );
+                this.validateIdentity( secondIdentity );
                 break;
             case IN_PROGRESS:
             case REFUSED:
@@ -62,6 +66,15 @@ public class AccountCreationRequestManagement extends AbstractTaskManagement
             case PROCESSED:
             default:
                 break;
+        }
+    }
+
+    private void validateIdentity( final IdentityDto identityDto ) throws TaskValidationException
+    {
+        this.validateEmail( identityDto, false );
+        if ( !identityDto.isMonParisActive( ) )
+        {
+            throw new TaskValidationException( "The identity " + identityDto.getCustomerId( ) + " is not connected (Mon Paris)" );
         }
     }
 
