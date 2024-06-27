@@ -66,9 +66,9 @@
     </dependencies>
 
     <scm>
-        <connection>scm:git:https://github.com/lutece-secteur-public/gru-module-identitystore-quality.git</connection>
-        <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-module-identitystore-quality.git</developerConnection>
-        <url>https://github.com/lutece-secteur-public/gru-module-identitystore-quality.git</url>
+        <connection>scm:git:https://github.com/lutece-secteur-public/gru-module-taskstack-identity.git</connection>
+        <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-module-taskstack-identity.git</developerConnection>
+        <url>https://github.com/lutece-secteur-public/gru-module-taskstack-identity</url>
         <tag>HEAD</tag>
     </scm>
 
