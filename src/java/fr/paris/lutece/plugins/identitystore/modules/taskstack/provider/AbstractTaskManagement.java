@@ -128,7 +128,7 @@ public abstract class AbstractTaskManagement implements ITaskManagement
             if ( pivotAttributes.size( ) == pivotKeys.size( ) - 1
                     && pivotAttributes.stream( ).map( AttributeDto::getKey ).noneMatch( s -> s.equals( Constants.PARAM_BIRTH_PLACE_CODE ) )
                     && pivotAttributes.stream( ).anyMatch( attributeDto -> attributeDto.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY_CODE )
-                            && attributeDto.getValue( ).equals( "99100" ) ) )
+                            && !attributeDto.getValue( ).equals( "99100" ) ) )
             {
                 this.validateAttributesCertification( pivotAttributes, minCertificationCode );
             }
