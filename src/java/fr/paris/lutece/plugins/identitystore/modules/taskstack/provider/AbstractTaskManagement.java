@@ -38,13 +38,13 @@ import fr.paris.lutece.plugins.identitystore.business.identity.Identity;
 import fr.paris.lutece.plugins.identitystore.business.identity.IdentityHome;
 import fr.paris.lutece.plugins.identitystore.business.referentiel.RefAttributeCertificationLevel;
 import fr.paris.lutece.plugins.identitystore.service.attribute.IdentityAttributeService;
-import fr.paris.lutece.plugins.identitystore.service.attribute.IdentityAttributeValidationService;
 import fr.paris.lutece.plugins.identitystore.service.contract.AttributeCertificationDefinitionService;
-import fr.paris.lutece.plugins.identitystore.service.identity.IdentityAttributeNotFoundException;
+import fr.paris.lutece.plugins.identitystore.v3.web.request.validator.IdentityAttributeValidator;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.DtoConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
+import fr.paris.lutece.plugins.identitystore.web.exception.ResourceNotFoundException;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 import fr.paris.lutece.plugins.taskstack.service.ITaskManagement;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -80,12 +80,12 @@ public abstract class AbstractTaskManagement implements ITaskManagement
                 .orElseThrow( ( ) -> new TaskValidationException( "The identity does not have an email attribute" ) );
         try
         {
-            if ( !IdentityAttributeValidationService.instance( ).validateAttribute( Constants.PARAM_EMAIL, emailAttr.getValue( ) ) )
+            if ( !IdentityAttributeValidator.instance( ).validateAttribute( Constants.PARAM_EMAIL, emailAttr.getValue( ) ) )
             {
                 throw new TaskValidationException( "The identity email has an invalid value format" );
             }
         }
-        catch( final IdentityAttributeNotFoundException e )
+        catch( final ResourceNotFoundException e )
         {
             throw new TaskValidationException( e.getMessage( ), e );
         }
