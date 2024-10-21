@@ -5,4 +5,5 @@
     <bean id="taskstack-identity.account.creation.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AccountCreationRequestManagement" />
     <bean id="taskstack-identity.email.validation.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.EmailValidationRequestManagement" />
     <bean id="taskstack-identity.account.merge.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AccountMergeRequestManagement" />
+    <bean id="taskstack-identity.account.identity.merge.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AccountIdentityMergeRequestManagement" />
 </beans>
