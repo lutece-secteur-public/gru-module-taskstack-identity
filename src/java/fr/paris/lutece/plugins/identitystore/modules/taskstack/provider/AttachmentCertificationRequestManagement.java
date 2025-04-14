@@ -33,9 +33,19 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
+import fr.paris.lutece.plugins.identitystore.business.application.ClientApplication;
+import fr.paris.lutece.plugins.identitystore.business.application.ClientApplicationHome;
+import fr.paris.lutece.plugins.identitystore.business.contract.ServiceContract;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.DtoConverter;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.application.ClientApplicationDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.List;
 
 public class AttachmentCertificationRequestManagement extends AbstractTaskManagement
 {
@@ -51,6 +61,12 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         switch( task.getTaskStatus( ) )
         {
             case TODO:
+                final String files = task.getMetadata( ).get( Constants.METADATA_FILES );
+                final ClientApplicationDto clientApplicationDto = (this.validateAndGetClientCode(task.getMetadata( ).get( Constants.METADATA_CLIENT_CODE )));
+                this.validateAndGetIdentity( task.getResourceId( ) );
+                this.validateFiles( files );
+                this.validateRights( clientApplicationDto );
+                break;
             case IN_PROGRESS:
             case REFUSED:
             case CANCELED:
@@ -60,8 +76,54 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         }
     }
 
+    private void validateIdentity( final IdentityDto identityDto ) throws TaskValidationException
+    {
+
+        if ( identityDto == null )
+        {
+            throw new TaskValidationException( "The cuid does not correspond to a valid identity" );
+        }
+    }
+
+    private void validateFiles ( final String metadata ) throws TaskValidationException
+    {
+        if( StringUtils.isBlank(metadata) )
+        {
+            throw new TaskValidationException( "The Files metadata are null or empty" );
+        }
+    }
+
+    private ClientApplicationDto validateAndGetClientCode(final String clientCode ) throws TaskValidationException
+    {
+        ClientApplication clientApplication = ClientApplicationHome.findByCode( clientCode );
+        if( clientApplication == null )
+        {
+            throw new TaskValidationException( "No Client was found for the provided code " + clientCode );
+        }
+
+        return DtoConverter.convertClientToDto(clientApplication);
+    }
+
+    private void validateRights( ClientApplicationDto clientApplicationDto ) throws TaskValidationException
+    {
+        List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract(clientApplicationDto.getClientCode());
+        boolean certificationRight = false;
+        for( ServiceContract svcContract : serviceContractList )
+        {
+            if(svcContract.getAuthorizedAttachmentCertification())
+            {
+                certificationRight = true;
+                break;
+            }
+        }
+        if(!certificationRight)
+        {
+            throw new TaskValidationException( "No Client does not have rights to import files" );
+        }
+    }
+
     @Override
-    public void doAfter( final TaskDto task ) throws TaskValidationException
+    public void doAfter(final TaskDto task ) throws TaskValidationException
     {
 
     }
