@@ -8,4 +8,9 @@
     <bean id="taskstack-identity.account.identity.merge.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AccountIdentityMergeRequestManagement" />
     <bean id="taskstack-identity.attachment.certification.management" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.provider.AttachmentCertificationRequestManagement" />
 
+    <!-- DAO -->
+    <bean id="taskstack-identity.client-task-right.dao" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.business.ClientTaskRightDAO" />
+
+    <!-- REST -->
+    <bean id="taskstack-identity.clientTaskRightRest" class="fr.paris.lutece.plugins.identitystore.modules.taskstack.web.rs.ClientTaskRightRest" />
 </beans>
