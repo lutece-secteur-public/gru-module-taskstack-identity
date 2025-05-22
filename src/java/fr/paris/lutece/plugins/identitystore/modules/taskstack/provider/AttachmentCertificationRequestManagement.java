@@ -33,22 +33,23 @@
  */
 package fr.paris.lutece.plugins.identitystore.modules.taskstack.provider;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.paris.lutece.plugins.identitystore.business.application.ClientApplication;
 import fr.paris.lutece.plugins.identitystore.business.application.ClientApplicationHome;
 import fr.paris.lutece.plugins.identitystore.business.contract.ServiceContract;
-import fr.paris.lutece.plugins.identitystore.modules.taskstack.business.ClientTask;
-import fr.paris.lutece.plugins.identitystore.modules.taskstack.business.ClientTaskRightHome;
-import fr.paris.lutece.plugins.identitystore.modules.taskstack.service.ClientTaskRightService;
+import fr.paris.lutece.plugins.taskstack.business.task.TaskChangeType;
+import fr.paris.lutece.plugins.taskstack.business.taskright.TaskRight;
+import fr.paris.lutece.plugins.taskstack.business.taskright.TaskRightHome;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.DtoConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.application.ClientApplicationDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
+import fr.paris.lutece.plugins.taskstack.rs.dto.TaskRightType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AttachmentCertificationRequestManagement extends AbstractTaskManagement
@@ -66,11 +67,8 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         {
             case TODO:
                 final String files = task.getMetadata( ).get( Constants.METADATA_FILES );
-                final ClientApplicationDto clientApplicationDto = ( this
-                        .validateAndGetClientCode( task.getMetadata( ).get( Constants.METADATA_CLIENT_CODE ) ) );
                 this.validateAndGetIdentity( task.getResourceId( ) );
                 this.validateFiles( files );
-                this.validateRights( clientApplicationDto );
                 break;
             case IN_PROGRESS:
             case REFUSED:
@@ -103,21 +101,39 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         ClientApplication clientApplication = ClientApplicationHome.findByCode( clientCode );
         if ( clientApplication == null )
         {
-            throw new TaskValidationException( "No Client was found for the provided code " + clientCode );
+            return null;
         }
 
         return DtoConverter.convertClientToDto( clientApplication );
     }
 
+    @Override
+    public void doAfter(final TaskDto task ) throws TaskValidationException
+    {
+
+    }
+
+    @Override
+    public void checkAccess(final TaskDto task, TaskChangeType type ) throws TaskValidationException
+    {
+        if(type.name().equals(TaskChangeType.UPDATED.name()) || type.name().equals(TaskChangeType.READ.name())) {
+            final ClientApplicationDto clientApplicationDto = (this.validateAndGetClientCode(task.getMetadata().get(Constants.METADATA_CLIENT_CODE)));
+            this.validateRights(clientApplicationDto);
+        }
+    }
+
     private void validateRights( ClientApplicationDto clientApplicationDto ) throws TaskValidationException
     {
-        List<ClientTask> clientTaskList = ClientTaskRightHome.getListClientTaskWithCodeSource(clientApplicationDto.getClientCode());
+        List<TaskRight> taskRightList = clientApplicationDto == null
+                ? TaskRightHome.searchTaskRight("*", null, null)
+                : TaskRightHome.searchTaskRight(clientApplicationDto.getClientCode() , null, null);
         boolean certificationRight = false;
-        for( ClientTask clientTask : clientTaskList )
+        for( TaskRight taskRight : taskRightList)
         {
-            if( StringUtils.equals(clientTask.getAskedRights(), ClientRightType.ATTACHMENT_CERTIFICATION.name() ) )
+            if( StringUtils.equals(taskRight.getTaskType(), TaskRightType.ATTACHMENT_CERTIFICATION.name() )
+                    || StringUtils.equals(taskRight.getTaskType(), Constants.PARAM_ALL_TASK_TYPES ) )
             {
-                List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract(clientTask.getClientCodeTaskUser());
+                List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract(taskRight.getAuthorizedClientCode());
 
                 for (ServiceContract svcContract : serviceContractList)
                 {
@@ -137,11 +153,5 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         {
             throw new TaskValidationException( "Client does not have rights to import files" );
         }
-    }
-
-    @Override
-    public void doAfter( final TaskDto task ) throws TaskValidationException
-    {
-
     }
 }
