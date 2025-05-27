@@ -62,7 +62,8 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         {
             case TODO:
                 final String files = task.getMetadata( ).get( Constants.METADATA_FILES );
-                final ClientApplicationDto clientApplicationDto = (this.validateAndGetClientCode(task.getMetadata( ).get( Constants.METADATA_CLIENT_CODE )));
+                final ClientApplicationDto clientApplicationDto = ( this
+                        .validateAndGetClientCode( task.getMetadata( ).get( Constants.METADATA_CLIENT_CODE ) ) );
                 this.validateAndGetIdentity( task.getResourceId( ) );
                 this.validateFiles( files );
                 this.validateRights( clientApplicationDto );
@@ -85,45 +86,45 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         }
     }
 
-    private void validateFiles ( final String metadata ) throws TaskValidationException
+    private void validateFiles( final String metadata ) throws TaskValidationException
     {
-        if( StringUtils.isBlank(metadata) )
+        if ( StringUtils.isBlank( metadata ) )
         {
             throw new TaskValidationException( "The Files metadata are null or empty" );
         }
     }
 
-    private ClientApplicationDto validateAndGetClientCode(final String clientCode ) throws TaskValidationException
+    private ClientApplicationDto validateAndGetClientCode( final String clientCode ) throws TaskValidationException
     {
         ClientApplication clientApplication = ClientApplicationHome.findByCode( clientCode );
-        if( clientApplication == null )
+        if ( clientApplication == null )
         {
             throw new TaskValidationException( "No Client was found for the provided code " + clientCode );
         }
 
-        return DtoConverter.convertClientToDto(clientApplication);
+        return DtoConverter.convertClientToDto( clientApplication );
     }
 
     private void validateRights( ClientApplicationDto clientApplicationDto ) throws TaskValidationException
     {
-        List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract(clientApplicationDto.getClientCode());
+        List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract( clientApplicationDto.getClientCode( ) );
         boolean certificationRight = false;
-        for( ServiceContract svcContract : serviceContractList )
+        for ( ServiceContract svcContract : serviceContractList )
         {
-            if(svcContract.getAuthorizedAttachmentCertification())
+            if ( svcContract.getAuthorizedAttachmentCertification( ) )
             {
                 certificationRight = true;
                 break;
             }
         }
-        if(!certificationRight)
+        if ( !certificationRight )
         {
             throw new TaskValidationException( "No Client does not have rights to import files" );
         }
     }
 
     @Override
-    public void doAfter(final TaskDto task ) throws TaskValidationException
+    public void doAfter( final TaskDto task ) throws TaskValidationException
     {
 
     }

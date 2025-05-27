@@ -68,10 +68,10 @@ public class AccountIdentityMergeRequestManagement extends AbstractTaskManagemen
         }
     }
 
-    private void validateIdentity( final IdentityDto identityDto1, final IdentityDto identityDto2  ) throws TaskValidationException
+    private void validateIdentity( final IdentityDto identityDto1, final IdentityDto identityDto2 ) throws TaskValidationException
     {
         this.validateEmail( identityDto2, false );
-        
+
         if ( !identityDto1.isMonParisActive( ) )
         {
             throw new TaskValidationException( "The identity " + identityDto1.getCustomerId( ) + " is not connected (Mon Paris)" );
