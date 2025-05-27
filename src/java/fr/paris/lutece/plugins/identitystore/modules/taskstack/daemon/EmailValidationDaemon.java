@@ -29,6 +29,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Email validation daemon
+ * 
+ * Search identities not merged, not connected, with an email "DEC" certified, 
+ * and generate EMAIL_VALIDATION_REQUEST Tasks for each identity (if not exists),
+ * with last update date and client code of the Email attribute in metadata,
+ * and with an  expiration date .
+ * 
+ * 
+ * 
+ * 
+ */
 public class EmailValidationDaemon extends LoggingDaemon
 {
 
@@ -38,14 +50,16 @@ public class EmailValidationDaemon extends LoggingDaemon
     private final String clientCode = AppPropertiesService.getProperty( "daemon.emailValidationDaemon.client.code" );
     private final int taskExpirationMonth = AppPropertiesService.getPropertyInt( "daemon.emailValidationDaemon.task.expiration.month", 6 );
     private final int batchLimit = AppPropertiesService.getPropertyInt( "daemon.emailValidationDaemon.batch.limit", 200 );
+    
+    private final String nonCertifiedProcess = AppPropertiesService.getProperty("identitystore.identity.uncertify.processus", "DEC") ;
 
     @Override
     public void doTask( )
     {
         final StopWatch stopWatch = StopWatch.createStarted( );
         this.info( "Starting email validation daemon..." );
-
-        final List<String> cuidList = IdentityHome.findNotMergedNotConnectedWithNonCertifiedAttributeCustomerIds( Constants.PARAM_EMAIL, batchLimit );
+        
+        final List<String> cuidList = IdentityHome.findNotMergedNotConnectedWithNonCertifiedAttributeCustomerIds( Constants.PARAM_EMAIL, nonCertifiedProcess, batchLimit );
         if ( cuidList.isEmpty( ) )
         {
             this.info( "No suitable identity found for email validation daemon." );
@@ -55,6 +69,7 @@ public class EmailValidationDaemon extends LoggingDaemon
             this.info( cuidList.size( ) + " suitable identities found for email validation daemon. Batch limit = " + batchLimit );
             final EmailValidationRequestManagement requestManagement = SpringContextService.getContext( ).getBean( EmailValidationRequestManagement.class );
             final RequestAuthor requestAuthor = buildAuthor( System.currentTimeMillis( ) );
+            
             int skippedExistingTask = 0;
             int skippedError = 0;
             int skippedNonValidate = 0;
@@ -68,17 +83,19 @@ public class EmailValidationDaemon extends LoggingDaemon
                             null, null, null, 1 );
                     if ( !existingTaskIds.isEmpty( ) )
                     {
+                	// Task already exists
                         skippedExistingTask++;
                         continue;
                     }
                 }
-                catch( final TaskStackException e )
+                catch ( final TaskStackException e )
                 {
                     this.error( "error while searching for existing tasks :: " + e.getMessage( ) );
                     skippedError++;
                     continue;
                 }
 
+                // Generate the Task
                 final TaskDto task = new TaskDto( );
                 task.setTaskType( IdentityTaskType.EMAIL_VALIDATION_REQUEST.name( ) );
                 task.setResourceType( IdentityResourceType.CUID.name( ) );
@@ -87,6 +104,7 @@ public class EmailValidationDaemon extends LoggingDaemon
 
                 try
                 {
+                    // check if data is valid (cuid / mail)
                     requestManagement.doBefore( task );
                 }
                 catch( final TaskValidationException e )
@@ -96,6 +114,7 @@ public class EmailValidationDaemon extends LoggingDaemon
                     continue;
                 }
 
+                // Search in attribute history last update date and client code of the Email attribute 
                 final List<AttributeChange> attributeHistory;
                 try
                 {
@@ -111,7 +130,11 @@ public class EmailValidationDaemon extends LoggingDaemon
                         .filter( a -> List.of( AttributeChangeType.CREATE, AttributeChangeType.UPDATE ).contains( a.getChangeType( ) ) ).findFirst( )
                         .ifPresent( lastEmailChange -> task.setMetadata( Map.of( Constants.METADATA_LAST_UPDATE_CLIENT_CODE, lastEmailChange.getClientCode( ),
                                 Constants.METADATA_LAST_UPDATE_DATE, metadataDateFormat.format( lastEmailChange.getModificationDate( ) ) ) ) );
+                
+                // set task expiration date
                 task.setExpirationDate( Timestamp.valueOf( LocalDateTime.now( ).plusMonths( taskExpirationMonth ) ) );
+                
+                // Generate Task
                 try
                 {
                     TaskService.instance( ).createTask( task, requestAuthor, clientCode );
@@ -135,6 +158,12 @@ public class EmailValidationDaemon extends LoggingDaemon
         this.info( "Email validation daemon completed. " + execTime );
     }
 
+    /**
+     * buid Author name with execution date
+     * 
+     * @param time
+     * @return the request author
+     */
     private RequestAuthor buildAuthor( final long time )
     {
         final RequestAuthor author = new RequestAuthor( );
