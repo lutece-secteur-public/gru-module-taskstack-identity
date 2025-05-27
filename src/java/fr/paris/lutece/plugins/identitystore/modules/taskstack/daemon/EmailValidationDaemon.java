@@ -74,6 +74,7 @@ public class EmailValidationDaemon extends LoggingDaemon {
                 task.setTaskType(IdentityTaskType.EMAIL_VALIDATION_REQUEST.name());
                 task.setResourceType(IdentityResourceType.CUID.name());
                 task.setResourceId(cuid);
+                task.setTaskStatus ( TaskStatusType.TODO );
 
                 try {
                     requestManagement.doBefore(task);
