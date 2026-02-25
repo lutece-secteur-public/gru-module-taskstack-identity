@@ -38,14 +38,11 @@ import fr.paris.lutece.plugins.identitystore.business.application.ClientApplicat
 import fr.paris.lutece.plugins.identitystore.business.contract.ServiceContract;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.DtoConverter;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.application.ClientApplicationDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
 import org.apache.commons.lang3.StringUtils;
-
-import java.util.List;
 
 public class AttachmentCertificationRequestManagement extends AbstractTaskManagement
 {
@@ -77,29 +74,20 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
         }
     }
 
-    private void validateIdentity( final IdentityDto identityDto ) throws TaskValidationException
-    {
-
-        if ( identityDto == null )
-        {
-            throw new TaskValidationException( "The cuid does not correspond to a valid identity" );
-        }
-    }
-
     private void validateFiles( final String metadata ) throws TaskValidationException
     {
         if ( StringUtils.isBlank( metadata ) )
         {
-            throw new TaskValidationException( "The Files metadata are null or empty" );
+            throw new TaskValidationException( "The Files metadata are null or empty", Constants.PROPERTY_REST_ERROR_FILES_METADATA_EMPTY );
         }
     }
 
     private ClientApplicationDto validateAndGetClientCode( final String clientCode ) throws TaskValidationException
     {
-        ClientApplication clientApplication = ClientApplicationHome.findByCode( clientCode );
+        final ClientApplication clientApplication = ClientApplicationHome.findByCode( clientCode );
         if ( clientApplication == null )
         {
-            throw new TaskValidationException( "No Client was found for the provided code " + clientCode );
+            throw new TaskValidationException( "No Client was found for the provided code " + clientCode, Constants.PROPERTY_REST_ERROR_NO_CLIENT_FOUND );
         }
 
         return DtoConverter.convertClientToDto( clientApplication );
@@ -107,20 +95,11 @@ public class AttachmentCertificationRequestManagement extends AbstractTaskManage
 
     private void validateRights( ClientApplicationDto clientApplicationDto ) throws TaskValidationException
     {
-        List<ServiceContract> serviceContractList = ClientApplicationHome.selectActiveServiceContract( clientApplicationDto.getClientCode( ) );
-        boolean certificationRight = false;
-        for ( ServiceContract svcContract : serviceContractList )
-        {
-            if ( svcContract.getAuthorizedAttachmentCertification( ) )
-            {
-                certificationRight = true;
-                break;
-            }
-        }
-        if ( !certificationRight )
-        {
-            throw new TaskValidationException( "No Client does not have rights to import files" );
-        }
+        ClientApplicationHome.selectActiveServiceContract( clientApplicationDto.getClientCode( ) )
+                .stream( )
+                .filter( ServiceContract::getAuthorizedAttachmentCertification )
+                .findAny( )
+                .orElseThrow( ( ) -> new TaskValidationException( "The Client does not have rights to import files", Constants.PROPERTY_REST_ERROR_CLIENT_IMPORT_FILES_RIGHT ) );
     }
 
     @Override

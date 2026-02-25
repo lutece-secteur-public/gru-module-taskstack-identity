@@ -74,7 +74,7 @@ public class AccountIdentityMergeRequestManagement extends AbstractTaskManagemen
 
         if ( !identityDto1.isMonParisActive( ) )
         {
-            throw new TaskValidationException( "The identity " + identityDto1.getCustomerId( ) + " is not connected (Mon Paris)" );
+            throw new TaskValidationException( "The identity " + identityDto1.getCustomerId( ) + " is not connected (Mon Paris)", Constants.PROPERTY_REST_ERROR_IDENTITY_NOT_CONNECTED );
         }
     }
 

@@ -74,7 +74,7 @@ public class AccountMergeRequestManagement extends AbstractTaskManagement
         this.validateEmail( identityDto, false );
         if ( !identityDto.isMonParisActive( ) )
         {
-            throw new TaskValidationException( "The identity " + identityDto.getCustomerId( ) + " is not connected (Mon Paris)" );
+            throw new TaskValidationException( "The identity " + identityDto.getCustomerId( ) + " is not connected (Mon Paris)", Constants.PROPERTY_REST_ERROR_IDENTITY_NOT_CONNECTED );
         }
     }
 

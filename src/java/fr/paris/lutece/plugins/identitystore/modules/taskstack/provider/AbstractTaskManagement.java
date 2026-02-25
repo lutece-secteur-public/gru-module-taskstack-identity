@@ -60,15 +60,15 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         final Identity identity = IdentityHome.findByCustomerId( cuid );
         if ( identity == null )
         {
-            throw new TaskValidationException( "No identity was found for the provided CUID " + cuid );
+            throw new TaskValidationException( "No identity was found for the provided CUID " + cuid, Constants.PROPERTY_REST_ERROR_IDENTITY_NOT_FOUND );
         }
         if ( identity.isDeleted( ) )
         {
-            throw new TaskValidationException( "The identity " + cuid + " is deleted" );
+            throw new TaskValidationException( "The identity " + cuid + " is deleted", Constants.PROPERTY_REST_ERROR_IDENTITY_DELETED );
         }
         if ( identity.isMerged( ) )
         {
-            throw new TaskValidationException( "The identity " + cuid + " is merged" );
+            throw new TaskValidationException( "The identity " + cuid + " is merged", Constants.PROPERTY_REST_ERROR_IDENTITY_MERGED );
         }
 
         return DtoConverter.convertIdentityToDto( identity );
@@ -82,18 +82,18 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         {
             if ( !IdentityAttributeValidator.instance( ).validateAttribute( Constants.PARAM_EMAIL, emailAttr.getValue( ) ) )
             {
-                throw new TaskValidationException( "The identity email has an invalid value format" );
+                throw new TaskValidationException( "The identity email has an invalid value format", Constants.PROPERTY_REST_ERROR_EMAIL_FORMAT_ERROR );
             }
         }
         catch( final ResourceNotFoundException e )
         {
-            throw new TaskValidationException( e.getMessage( ), e );
+            throw new TaskValidationException( e.getMessage( ), e, Constants.PROPERTY_REST_ERROR_ATTRIBUTE_NOT_FOUND );
         }
         if ( checkCertification )
         {
             if ( emailAttr.getCertificationLevel( ) != null && emailAttr.getCertificationLevel( ) > 100 )
             {
-                throw new TaskValidationException( "The identity email has already been validated" );
+                throw new TaskValidationException( "The identity email has already been validated", Constants.PROPERTY_REST_ERROR_EMAIL_ALREADY_VALIDATED );
             }
         }
     }
@@ -103,7 +103,7 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         this.validateEmail( identityDto, false );
         if ( identityDto.isMonParisActive( ) )
         {
-            throw new TaskValidationException( "The identity is already connected" );
+            throw new TaskValidationException( "The identity is already connected", Constants.PROPERTY_REST_ERROR_IDENTITY_ALREADY_CONNECTED );
         }
         this.validateIdentityCertification( identityDto );
     }
@@ -135,7 +135,7 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         // invalid
         else
         {
-            throw new TaskValidationException( "The identity has missing pivot attributes and cannot be connected" );
+            throw new TaskValidationException( "The identity has missing pivot attributes and cannot be connected", Constants.PROPERTY_REST_ERROR_IDENTITY_REQUIRED_PIVOT_ATTRIBUTES );
         }
     }
 
@@ -158,7 +158,7 @@ public abstract class AbstractTaskManagement implements ITaskManagement
             final StringBuilder error = new StringBuilder( "Some errors occurred during pivot attributes validation. The minimum certification processus is " )
                     .append( minCertificationCode ).append( "." );
             errors.forEach( error::append );
-            throw new TaskValidationException( error.toString( ) );
+            throw new TaskValidationException( error.toString( ), Constants.PROPERTY_REST_ERROR_IDENTITY_ATTRIBUTES_CERTIFICATION_VALIDATION );
         }
     }
 
