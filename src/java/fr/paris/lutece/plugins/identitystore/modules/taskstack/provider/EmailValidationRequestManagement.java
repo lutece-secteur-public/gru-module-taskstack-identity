@@ -37,7 +37,13 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
+import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
+import fr.paris.lutece.plugins.taskstack.service.TaskService;
+import fr.paris.lutece.portal.service.util.AppLogService;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 public class EmailValidationRequestManagement extends AbstractTaskManagement
 {
@@ -68,6 +74,24 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
     @Override
     public void doAfter( final TaskDto task ) throws TaskValidationException
     {
-
+        switch( task.getTaskStatus( ) )
+        {
+            case TODO:
+                try {
+                    TaskService.instance().searchTaskAndUpdateStatus( null, task.getResourceId(), task.getResourceType(), task.getTaskType(),
+                            null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
+                            null, null, 500, null, TaskStatusType.CANCELED, Collections.singletonList( task.getTaskCode( ) ),
+                            this.getAuthor( ), this.getClientCode( ) );
+                } catch ( final TaskStackException e ) {
+                    AppLogService.error( "Could not update duplicate tasks status.", e );
+                }
+                break;
+            case IN_PROGRESS:
+            case REFUSED:
+            case CANCELED:
+            case PROCESSED:
+            default:
+                break;
+        }
     }
 }
