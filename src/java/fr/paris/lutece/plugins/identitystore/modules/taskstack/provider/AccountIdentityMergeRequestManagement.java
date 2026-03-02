@@ -38,7 +38,15 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.taskstack.business.task.TaskStatusType;
 import fr.paris.lutece.plugins.taskstack.dto.TaskDto;
+import fr.paris.lutece.plugins.taskstack.exception.TaskStackException;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
+import fr.paris.lutece.plugins.taskstack.service.TaskService;
+import fr.paris.lutece.portal.service.util.AppLogService;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AccountIdentityMergeRequestManagement extends AbstractTaskManagement
 {
@@ -81,6 +89,27 @@ public class AccountIdentityMergeRequestManagement extends AbstractTaskManagemen
     @Override
     public void doAfter( final TaskDto task ) throws TaskValidationException
     {
-
+        switch( task.getTaskStatus( ) )
+        {
+            case TODO:
+                final String secondCuid = task.getMetadata( ).get( Constants.METADATA_ACCOUNT_MERGE_SECOND_CUID );
+                final Map<String, String> metadataForSearch = new HashMap<>();
+                metadataForSearch.put( Constants.METADATA_ACCOUNT_MERGE_SECOND_CUID, secondCuid );
+                try {
+                    TaskService.instance().searchTaskAndUpdateStatus( null, task.getResourceId(), task.getResourceType(), task.getTaskType(),
+                            null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
+                            null, null, 500, metadataForSearch, TaskStatusType.CANCELED, Collections.singletonList( task.getTaskCode( ) ),
+                            this.getAuthor( ), this.getClientCode( ) );
+                } catch ( final TaskStackException e ) {
+                    AppLogService.error( "Could not update duplicate tasks status.", e );
+                }
+                break;
+            case IN_PROGRESS:
+            case REFUSED:
+            case CANCELED:
+            case PROCESSED:
+            default:
+                break;
+        }
     }
 }

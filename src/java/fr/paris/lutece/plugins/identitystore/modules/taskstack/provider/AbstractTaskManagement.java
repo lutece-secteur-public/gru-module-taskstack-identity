@@ -46,6 +46,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.web.exception.ResourceNotFoundException;
 import fr.paris.lutece.plugins.taskstack.exception.TaskValidationException;
+import fr.paris.lutece.plugins.taskstack.rs.request.common.RequestAuthor;
 import fr.paris.lutece.plugins.taskstack.service.ITaskManagement;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
@@ -55,6 +56,10 @@ import java.util.stream.Collectors;
 
 public abstract class AbstractTaskManagement implements ITaskManagement
 {
+    private final static String _clientCode = AppPropertiesService.getProperty("task.change.client.code", "DEFAULT");
+    private final static String _authorName = AppPropertiesService.getProperty("task.change.author.name", "DEFAULT");
+    private final static String _authorType = AppPropertiesService.getProperty("task.change.author.type", "admin");
+
     protected IdentityDto validateAndGetIdentity( final String cuid ) throws TaskValidationException
     {
         final Identity identity = IdentityHome.findByCustomerId( cuid );
@@ -162,4 +167,13 @@ public abstract class AbstractTaskManagement implements ITaskManagement
         }
     }
 
+    protected RequestAuthor getAuthor( )
+    {
+        return new RequestAuthor( _authorName, _authorType );
+    }
+
+    protected String getClientCode( )
+    {
+        return _clientCode;
+    }
 }
