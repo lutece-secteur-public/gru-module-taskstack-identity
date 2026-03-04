@@ -79,7 +79,7 @@ public class EmailValidationDaemon extends LoggingDaemon
                 try
                 {
                     final List<Integer> existingTaskIds = TaskService.instance( ).searchId( null, cuid, IdentityResourceType.CUID.name( ),
-                            IdentityTaskType.EMAIL_VALIDATION_REQUEST.name( ), null, null, null, List.of( TaskStatusType.TODO, TaskStatusType.IN_PROGRESS ),
+                            IdentityTaskType.EMAIL_VALIDATION_REQUEST.name( ), null, null, null, null, List.of( TaskStatusType.TODO, TaskStatusType.IN_PROGRESS ),
                             null, null, null, 1 );
                     if ( !existingTaskIds.isEmpty( ) )
                     {

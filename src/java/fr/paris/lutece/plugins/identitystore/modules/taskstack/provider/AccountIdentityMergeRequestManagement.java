@@ -97,7 +97,7 @@ public class AccountIdentityMergeRequestManagement extends AbstractTaskManagemen
                 metadataForSearch.put( Constants.METADATA_ACCOUNT_MERGE_SECOND_CUID, secondCuid );
                 try {
                     TaskService.instance().searchTaskAndUpdateStatus( null, task.getResourceId(), task.getResourceType(), task.getTaskType(),
-                            null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
+                            null, null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
                             null, null, 500, metadataForSearch, TaskStatusType.CANCELED, Collections.singletonList( task.getTaskCode( ) ),
                             this.getAuthor( ), this.getClientCode( ) );
                 } catch ( final TaskStackException e ) {

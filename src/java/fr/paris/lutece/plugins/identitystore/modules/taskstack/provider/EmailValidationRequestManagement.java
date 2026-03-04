@@ -79,7 +79,7 @@ public class EmailValidationRequestManagement extends AbstractTaskManagement
             case TODO:
                 try {
                     TaskService.instance().searchTaskAndUpdateStatus( null, task.getResourceId(), task.getResourceType(), task.getTaskType(),
-                            null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
+                            null, null, null, null, Arrays.asList(TaskStatusType.TODO, TaskStatusType.IN_PROGRESS),
                             null, null, 500, null, TaskStatusType.CANCELED, Collections.singletonList( task.getTaskCode( ) ),
                             this.getAuthor( ), this.getClientCode( ) );
                 } catch ( final TaskStackException e ) {
